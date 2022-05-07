@@ -166,7 +166,7 @@ class MainActivity : ComponentActivity(){
         val rotateVectorYStart = height/2.0f - paddingMiddle
         val rotateVectorYEnd = height/2.0f - paddingMiddle - strokeEnergy
 
-        val degreeOffset = (180.0 + arcFullDegrees.toDouble())/2.0
+        val degreeOffset = 180.0 + (180.0 - arcFullDegrees.toDouble())/2.0
         val rotatedXStart = width/2.0f + rotateVectorYStart * sin(toRadians(angle.toDouble() + degreeOffset))
         val rotatedYStart = height/2.0f - rotateVectorYStart * cos(toRadians(angle.toDouble() + degreeOffset))
         val rotatedXEnd = width/2.0f + rotateVectorYEnd * sin(toRadians(angle.toDouble() + degreeOffset))
