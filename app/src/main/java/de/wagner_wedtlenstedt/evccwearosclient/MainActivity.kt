@@ -3,9 +3,11 @@ package de.wagner_wedtlenstedt.evccwearosclient
 import android.graphics.*
 import android.os.Build
 import android.os.Bundle
+import android.util.DisplayMetrics
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.annotation.RequiresApi
+import androidx.core.content.res.ResourcesCompat
 import androidx.lifecycle.ViewModelProvider
 import com.caverock.androidsvg.SVG
 import de.wagner_wedtlenstedt.evccwearosclient.data.EvccStateModel
@@ -13,32 +15,36 @@ import de.wagner_wedtlenstedt.evccwearosclient.databinding.ActivityMainBinding
 import de.wagner_wedtlenstedt.evccwearosclient.viewmodel.EvccViewModel
 import java.lang.Integer.max
 import java.lang.Math.toRadians
-import kotlin.math.*
+import kotlin.math.abs
+import kotlin.math.cos
+import kotlin.math.min
+import kotlin.math.sin
 
 
 class MainActivity : ComponentActivity(){
 
-    private val greenColor = Color.argb(255, 102, 216, 90)
-    private val yellowColor = Color.argb(255, 200, 216, 90)
-    private val redColor = Color.argb(255, 200, 0, 0)
+    private val greenColor = Color.argb(255, 15, 222, 65)
+    private val yellowColor = Color.argb(255, 250, 240, 0)
+    private val orangeColor = Color.argb(255, 250, 125, 0)
     private val whiteColor = Color.argb(255, 255, 255, 255)
     private val blackColor = Color.argb(255, 0, 0, 0)
     private val darkGreyColor = Color.argb(255, 70, 70, 70)
     private val lightGreyColor = Color.argb(255, 150, 150, 150)
 
     private val batteryPowerThreshold = 50
-    private val strokeEnergy = 25.0f
-    private val strokeLegend = 2.0f
-    private val width = 240.0f
-    private val height = 240.0f
-    private val paddingMiddle = 30.0f
-    private val paddingLegend = 15.0f
-    private val paddingInner = paddingMiddle + strokeEnergy + paddingLegend
-    private val iconSize = 15.0f
+    private var strokeEnergy = 25.0f
+    private var strokeLegend = 2.0f
+    private var paddingMiddle = 30.0f
+    private var paddingLegend = 15.0f
+    private var paddingInner = paddingMiddle + strokeEnergy + paddingLegend
+    private var iconSize = 20.0f
     private val arcFullDegrees = 170.0f
+    private var leftPaddingCenterText = 20.0f
 
     private lateinit var binding: ActivityMainBinding
     private lateinit var vm:EvccViewModel
+    private var widgetSize = 0.0f
+    private var textSize = 12.0f
 
     @RequiresApi(Build.VERSION_CODES.R)
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -49,12 +55,29 @@ class MainActivity : ComponentActivity(){
 
         val imageView = binding.imageView
 
+        val display = imageView.rootView.context.display
+
+        val outMetrics = DisplayMetrics()
+        display?.getMetrics(outMetrics)
+
+        widgetSize = outMetrics.widthPixels.toFloat()
+
+        val factor = widgetSize/240.0f
+
+        strokeEnergy *= factor
+        strokeLegend *= factor
+        paddingMiddle *= factor
+        paddingLegend *= factor
+        paddingInner = paddingMiddle + strokeEnergy + paddingLegend
+        iconSize *= factor
+        textSize *= factor
+        leftPaddingCenterText *= factor
+
         vm = ViewModelProvider(this)[EvccViewModel::class.java]
 
         vm.getEvccLiveData()?.observe(this) {
             if (it != null) {
-                //TODO: retrieve size from view
-                val bitmap = Bitmap.createBitmap(240, 240, Bitmap.Config.ARGB_8888)
+                val bitmap = Bitmap.createBitmap(widgetSize.toInt(), widgetSize.toInt(), Bitmap.Config.ARGB_8888)
                 val canvas = Canvas(bitmap)
 
                 updatePowerDistributionArc(it, canvas)
@@ -74,16 +97,22 @@ class MainActivity : ComponentActivity(){
         val mode = it.result?.loadpoints?.first()?.mode ?: ""
         val vehicleRange = it.result?.loadpoints?.first()?.vehicleRange ?: 0.0f
 
+        val typefaceMedium = ResourcesCompat.getFont(applicationContext, R.font.montserratmedium)
+        val typefaceBold = ResourcesCompat.getFont(applicationContext, R.font.montserratbold)
         val paint = Paint(Paint.FILTER_BITMAP_FLAG or Paint.DITHER_FLAG or Paint.ANTI_ALIAS_FLAG)
         paint.style = Paint.Style.FILL_AND_STROKE
         paint.strokeCap = Paint.Cap.BUTT
         paint.color = whiteColor
         paint.strokeWidth = 0.25f
+        paint.typeface = typefaceMedium
+        paint.textSize = textSize
 
-        canvas.drawText("Mode:",width/2.0f - 20.0f,height/2.0f - 20.0f,paint)
-        canvas.drawText("$mode",width/2.0f - 20.0f,height/2.0f - 5.0f,paint)
-        canvas.drawText("Range:",width/2.0f - 20.0f,height/2.0f + 10.0f,paint)
-        canvas.drawText("$vehicleRange km",width/2.0f - 20.0f,height/2.0f + 25.0f,paint)
+        canvas.drawText("Mode:",widgetSize/2.0f - leftPaddingCenterText,widgetSize/2.0f - textSize*2.0f,paint)
+        canvas.drawText("Range:",widgetSize/2.0f - leftPaddingCenterText,widgetSize/2.0f + textSize,paint)
+
+        paint.typeface = typefaceBold
+        canvas.drawText(mode,widgetSize/2.0f - leftPaddingCenterText,widgetSize/2.0f - textSize,paint)
+        canvas.drawText("$vehicleRange km",widgetSize/2.0f - leftPaddingCenterText,widgetSize/2.0f + 2*textSize,paint)
     }
 
     private fun updateLoadpointArc(it: EvccStateModel, canvas: Canvas) {
@@ -102,7 +131,7 @@ class MainActivity : ComponentActivity(){
         paint.color = darkGreyColor
 
         val arcLoadpoint = RectF()
-        arcLoadpoint.set((strokeEnergy/2) + paddingMiddle, (strokeEnergy/2) + paddingMiddle, width-paddingMiddle-(strokeEnergy/2), height-paddingMiddle-(strokeEnergy/2))
+        arcLoadpoint.set((strokeEnergy/2) + paddingMiddle, (strokeEnergy/2) + paddingMiddle, widgetSize-paddingMiddle-(strokeEnergy/2), widgetSize-paddingMiddle-(strokeEnergy/2))
 
         val startAngleLoadpointArc = (180.0f - arcFullDegrees)/2.0f + 90
 
@@ -110,7 +139,7 @@ class MainActivity : ComponentActivity(){
 
         val isBelowMinSoc = vehicleSoC < minSoC
 
-        val socColor = if (isCarConnected) ( if(isBelowMinSoc) redColor else greenColor) else lightGreyColor
+        val socColor = if (isCarConnected) ( if(isBelowMinSoc) orangeColor else greenColor) else lightGreyColor
 
         val sweepAngleVehicleSoc = arcFullDegrees * vehicleSoC/100.0f
         drawLoadpointPart(
@@ -126,7 +155,7 @@ class MainActivity : ComponentActivity(){
         drawSocLine(arcFullDegrees*targetSoC/100,targetSoC,canvas,whiteColor)
 
         if(isBelowMinSoc){
-            drawSocLine(arcFullDegrees*minSoC/100,targetSoC,canvas,redColor)
+            drawSocLine(arcFullDegrees*minSoC/100,targetSoC,canvas,orangeColor)
         }
 
         drawLoadpointLegend(loadpointName,vehicleName,canvas)
@@ -138,9 +167,12 @@ class MainActivity : ComponentActivity(){
         paint.strokeCap = Paint.Cap.BUTT
         paint.color = whiteColor
         paint.strokeWidth = 0.25f
+        val typefaceMedium = ResourcesCompat.getFont(applicationContext, R.font.montserratmedium)
+        paint.typeface = typefaceMedium
+        paint.textSize = textSize
 
         val arcLoadpointLegend = RectF()
-        arcLoadpointLegend.set((strokeLegend/2) + paddingLegend, (strokeLegend/2) + paddingLegend, width-paddingLegend-(strokeLegend/2), height-paddingLegend-(strokeLegend/2))
+        arcLoadpointLegend.set((strokeLegend/2) + paddingLegend, (strokeLegend/2) + paddingLegend, widgetSize-paddingLegend-(strokeLegend/2), widgetSize-paddingLegend-(strokeLegend/2))
 
         with(canvas) {
             val path = Path()
@@ -163,14 +195,14 @@ class MainActivity : ComponentActivity(){
         paint.color = lineColor
         paint.strokeWidth = strokeLegend
 
-        val rotateVectorYStart = height/2.0f - paddingMiddle
-        val rotateVectorYEnd = height/2.0f - paddingMiddle - strokeEnergy
+        val rotateVectorYStart = widgetSize/2.0f - paddingMiddle
+        val rotateVectorYEnd = widgetSize/2.0f - paddingMiddle - strokeEnergy
 
         val degreeOffset = 180.0 + (180.0 - arcFullDegrees.toDouble())/2.0
-        val rotatedXStart = width/2.0f + rotateVectorYStart * sin(toRadians(angle.toDouble() + degreeOffset))
-        val rotatedYStart = height/2.0f - rotateVectorYStart * cos(toRadians(angle.toDouble() + degreeOffset))
-        val rotatedXEnd = width/2.0f + rotateVectorYEnd * sin(toRadians(angle.toDouble() + degreeOffset))
-        val rotatedYEnd = height/2.0f - rotateVectorYEnd * cos(toRadians(angle.toDouble() + degreeOffset))
+        val rotatedXStart = widgetSize/2.0f + rotateVectorYStart * sin(toRadians(angle.toDouble() + degreeOffset))
+        val rotatedYStart = widgetSize/2.0f - rotateVectorYStart * cos(toRadians(angle.toDouble() + degreeOffset))
+        val rotatedXEnd = widgetSize/2.0f + rotateVectorYEnd * sin(toRadians(angle.toDouble() + degreeOffset))
+        val rotatedYEnd = widgetSize/2.0f - rotateVectorYEnd * cos(toRadians(angle.toDouble() + degreeOffset))
 
         canvas.drawLine(rotatedXStart.toFloat(),rotatedYStart.toFloat(),rotatedXEnd.toFloat(),rotatedYEnd.toFloat(),paint)
 
@@ -210,9 +242,9 @@ class MainActivity : ComponentActivity(){
         val arcEnergyFlow = RectF()
         val arcOuterLegend = RectF()
         val arcInnerLegend = RectF()
-        arcEnergyFlow.set((strokeEnergy/2) + paddingMiddle, (strokeEnergy/2) + paddingMiddle, width-paddingMiddle-(strokeEnergy/2), height-paddingMiddle-(strokeEnergy/2))
-        arcOuterLegend.set((strokeLegend/2) + paddingLegend, (strokeLegend/2) + paddingLegend, width-paddingLegend-(strokeLegend/2), height-paddingLegend-(strokeLegend/2))
-        arcInnerLegend.set((strokeLegend/2) + paddingInner, (strokeLegend/2) + paddingInner, width-paddingInner-(strokeLegend/2), height-paddingInner-(strokeLegend/2))
+        arcEnergyFlow.set((strokeEnergy/2) + paddingMiddle, (strokeEnergy/2) + paddingMiddle, widgetSize-paddingMiddle-(strokeEnergy/2), widgetSize-paddingMiddle-(strokeEnergy/2))
+        arcOuterLegend.set((strokeLegend/2) + paddingLegend, (strokeLegend/2) + paddingLegend, widgetSize-paddingLegend-(strokeLegend/2), widgetSize-paddingLegend-(strokeLegend/2))
+        arcInnerLegend.set((strokeLegend/2) + paddingInner, (strokeLegend/2) + paddingInner, widgetSize-paddingInner-(strokeLegend/2), widgetSize-paddingInner-(strokeLegend/2))
 
         val sweepAngleSelfConsumption = arcFullDegrees * selfConsumption.toFloat()/overallPowerConsumptions.toFloat()
         val sweepAnglePvExport = arcFullDegrees * pvExport.toFloat()/overallPowerConsumptions.toFloat()
@@ -238,7 +270,7 @@ class MainActivity : ComponentActivity(){
             sweepAngleGridImport,
             canvas,
             arcEnergyFlow,
-            redColor,
+            orangeColor,
             gridImport
         )
 
@@ -328,14 +360,14 @@ class MainActivity : ComponentActivity(){
         drawLine(padding, canvas,paint,startAngle + sweepAngle, isInner)
 
         if(sweepAngle > iconSize * resourceIds.size) {
-            val rotateVectorYStart = height / 2.0f - padding
+            val rotateVectorYStart = widgetSize / 2.0f - padding
 
             val degreeOffset = (180.0 - arcFullDegrees.toDouble())/2.0
 
             val rotatedXStart =
-                width / 2.0f + rotateVectorYStart * sin(toRadians(startAngle.toDouble() + degreeOffset + sweepAngle.toDouble() / 2.0))
+                widgetSize / 2.0f + rotateVectorYStart * sin(toRadians(startAngle.toDouble() + degreeOffset + sweepAngle.toDouble() / 2.0))
             val rotatedYStart =
-                height / 2.0f - rotateVectorYStart * cos(toRadians(startAngle.toDouble() + degreeOffset + sweepAngle.toDouble() / 2.0))
+                widgetSize / 2.0f - rotateVectorYStart * cos(toRadians(startAngle.toDouble() + degreeOffset + sweepAngle.toDouble() / 2.0))
 
             paint.style = Paint.Style.FILL
             paint.color = blackColor
@@ -382,6 +414,9 @@ class MainActivity : ComponentActivity(){
             paint.strokeWidth = 0.25f
             paint.style = Paint.Style.FILL_AND_STROKE
             paint.strokeCap = Paint.Cap.ROUND
+            val typefaceMedium = ResourcesCompat.getFont(applicationContext, R.font.montserratmedium)
+            paint.typeface = typefaceMedium
+            paint.textSize = textSize
 
             //val strokeLength = Math.PI * (rect.width() - strokeEnergy) * sweepAngle / 360.0 * 0.5
             with(canvas) {
@@ -421,6 +456,9 @@ class MainActivity : ComponentActivity(){
             paint.strokeWidth = 0.25f
             paint.style = Paint.Style.FILL_AND_STROKE
             paint.strokeCap = Paint.Cap.ROUND
+            val typefaceMedium = ResourcesCompat.getFont(applicationContext, R.font.montserratmedium)
+            paint.typeface = typefaceMedium
+            paint.textSize = textSize
 
             //val strokeLength = Math.PI * (rect.width() - strokeEnergy) * sweepAngle / 360.0 * 0.5
             with(canvas) {
@@ -453,14 +491,14 @@ class MainActivity : ComponentActivity(){
         isInner: Boolean
     ) {
         val offset = if(isInner) -10.0f else 10.0f
-        val rotateVectorYStart = height/2.0f - padding
-        val rotateVectorYEnd = height/2.0f - (padding + offset)
+        val rotateVectorYStart = widgetSize/2.0f - padding
+        val rotateVectorYEnd = widgetSize/2.0f - (padding + offset)
 
         val degreeOffset = (180.0 - arcFullDegrees.toDouble())/2.0
-        val rotatedXStart = width/2.0f + rotateVectorYStart * sin(toRadians(angle.toDouble() + degreeOffset))
-        val rotatedYStart = height/2.0f - rotateVectorYStart * cos(toRadians(angle.toDouble() + degreeOffset))
-        val rotatedXEnd = width/2.0f + rotateVectorYEnd * sin(toRadians(angle.toDouble() + degreeOffset))
-        val rotatedYEnd = height/2.0f - rotateVectorYEnd * cos(toRadians(angle.toDouble() + degreeOffset))
+        val rotatedXStart = widgetSize/2.0f + rotateVectorYStart * sin(toRadians(angle.toDouble() + degreeOffset))
+        val rotatedYStart = widgetSize/2.0f - rotateVectorYStart * cos(toRadians(angle.toDouble() + degreeOffset))
+        val rotatedXEnd = widgetSize/2.0f + rotateVectorYEnd * sin(toRadians(angle.toDouble() + degreeOffset))
+        val rotatedYEnd = widgetSize/2.0f - rotateVectorYEnd * cos(toRadians(angle.toDouble() + degreeOffset))
 
         canvas.drawLine(rotatedXStart.toFloat(),rotatedYStart.toFloat(),rotatedXEnd.toFloat(),rotatedYEnd.toFloat(),paint)
     }

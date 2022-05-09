@@ -1,6 +1,7 @@
 package de.wagner_wedtlenstedt.evccwearosclient.network
 
 import com.google.gson.GsonBuilder
+import okhttp3.Dns
 import okhttp3.OkHttpClient
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
@@ -15,8 +16,9 @@ class ApiClient {
                 .setLenient()
                 .create()
             val okHttpClient = OkHttpClient.Builder()
-                .readTimeout(100, TimeUnit.SECONDS)
-                .connectTimeout(100, TimeUnit.SECONDS)
+                .readTimeout(3, TimeUnit.SECONDS)
+                .connectTimeout(3, TimeUnit.SECONDS)
+                //.dns(Dns())
                 .build()
             if (retrofit == null) {
                 retrofit = Retrofit.Builder()

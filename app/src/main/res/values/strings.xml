@@ -7,4 +7,6 @@
     <string name="hello_world">Hello Round World!</string>
     <string name="tile_label">EvccTile</string>
     <string name="tile_description">EvccTile</string>
+    <string name="mainevccview">mainEvccView</string>
+    <string name="mainview">mainView</string>
 </resources>

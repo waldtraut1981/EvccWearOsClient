@@ -1,18 +1,31 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.wear.widget.BoxInsetLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:fadeScrollbars="false"
+    android:layout_height="500dp"
+    android:fadeScrollbars="true"
+    android:orientation="vertical"
     android:padding="@dimen/box_inset_layout_padding"
+    android:scrollbarStyle="insideInset"
     tools:context=".MainActivity"
-    tools:deviceIds="wear">
+    tools:ignore="SpeakableTextPresentCheck">
 
-    <ImageView
-        android:id="@+id/imageView"
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        tools:src="@tools:sample/avatars" />
+        android:layout_height="wrap_content">
 
-</androidx.wear.widget.BoxInsetLayout>
+        <ImageView
+            android:id="@+id/imageView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:contentDescription="@string/mainview"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_bias="0.0"
+            tools:ignore="ImageContrastCheck"
+            tools:src="@tools:sample/avatars" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</ScrollView>
