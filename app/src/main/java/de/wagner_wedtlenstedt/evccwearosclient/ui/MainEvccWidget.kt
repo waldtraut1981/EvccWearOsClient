@@ -3,8 +3,10 @@ package de.wagner_wedtlenstedt.evccwearosclient.ui
 import android.content.Context
 import android.content.res.Resources
 import android.graphics.*
+import android.graphics.Paint.Style
+import android.graphics.Paint.Style.*
 import android.widget.ImageView
-import androidx.core.content.res.ResourcesCompat
+import androidx.core.content.res.ResourcesCompat.getFont
 import com.caverock.androidsvg.SVG
 import de.wagner_wedtlenstedt.evccwearosclient.R
 import de.wagner_wedtlenstedt.evccwearosclient.data.EvccStateModel
@@ -64,26 +66,67 @@ class MainEvccWidget(
         imageView.setImageBitmap(bitmap)
     }
 
+    private fun createBasePaint(style: Style, color: Int, strokeWidth: Float): Paint {
+        val paint = Paint(Paint.FILTER_BITMAP_FLAG or Paint.DITHER_FLAG or Paint.ANTI_ALIAS_FLAG)
+        paint.strokeCap = Paint.Cap.BUTT
+        paint.style = style
+        paint.color = color
+        paint.strokeWidth = strokeWidth
+        return paint
+    }
+
+    private fun createFontPaint(color: Int, bold: Boolean = false): Paint {
+        val font = if(bold){
+            getFont(applicationContext, R.font.montserratbold)
+        } else{
+            getFont(applicationContext, R.font.montserratmedium)
+        }
+
+        val paint = createBasePaint(FILL_AND_STROKE, color,0.25f)
+        paint.typeface = font
+        paint.textSize = textSize
+
+        return paint
+    }
+
+    private fun createArcPaint(color: Int): Paint {
+        return createBasePaint(STROKE, color, strokeEnergy)
+    }
+
+    private fun createLinePaint(color: Int): Paint {
+        return createBasePaint(STROKE, color, strokeLegend)
+    }
+
+    private fun createIconBackgroundPaint(color: Int): Paint {
+        return createBasePaint(FILL, color, strokeLegend)
+    }
+
     private fun updateCenterInfos(it: EvccStateModel, canvas: Canvas) {
         val mode = it.result?.loadpoints?.first()?.mode ?: ""
         val vehicleRange = it.result?.loadpoints?.first()?.vehicleRange ?: 0.0f
 
-        val typefaceMedium = ResourcesCompat.getFont(applicationContext, R.font.montserratmedium)
-        val typefaceBold = ResourcesCompat.getFont(applicationContext, R.font.montserratbold)
-        val paint = Paint(Paint.FILTER_BITMAP_FLAG or Paint.DITHER_FLAG or Paint.ANTI_ALIAS_FLAG)
-        paint.style = Paint.Style.FILL_AND_STROKE
-        paint.strokeCap = Paint.Cap.BUTT
-        paint.color = whiteColor
-        paint.strokeWidth = 0.25f
-        paint.typeface = typefaceMedium
-        paint.textSize = textSize
+        val paintMedium = createFontPaint(whiteColor)
 
-        canvas.drawText("Mode:",widgetSize/2.0f - leftPaddingCenterText,widgetSize/2.0f - textSize*2.0f,paint)
-        canvas.drawText("Range:",widgetSize/2.0f - leftPaddingCenterText,widgetSize/2.0f + textSize,paint)
+        val xPosition = widgetSize/2.0f - leftPaddingCenterText
+        canvas.drawText("Mode:",xPosition,widgetSize/2.0f - textSize*2.0f,paintMedium)
+        canvas.drawText("Range:",xPosition,widgetSize/2.0f + textSize,paintMedium)
 
-        paint.typeface = typefaceBold
-        canvas.drawText(mode,widgetSize/2.0f - leftPaddingCenterText,widgetSize/2.0f - textSize,paint)
-        canvas.drawText("$vehicleRange km",widgetSize/2.0f - leftPaddingCenterText,widgetSize/2.0f + 2*textSize,paint)
+        val paintBold = createFontPaint(whiteColor, true)
+
+        canvas.drawText(mode,xPosition,widgetSize/2.0f - textSize,paintBold)
+        canvas.drawText("$vehicleRange km",xPosition,widgetSize/2.0f + 2*textSize,paintBold)
+    }
+
+    private fun createEnergyRect(): RectF {
+        val rect = RectF()
+        rect.set((strokeEnergy/2) + paddingMiddle, (strokeEnergy/2) + paddingMiddle, widgetSize-paddingMiddle-(strokeEnergy/2), widgetSize-paddingMiddle-(strokeEnergy/2))
+        return rect
+    }
+
+    private fun createLoadpointRect(): RectF {
+        val rect = RectF()
+        rect.set((strokeLegend/2) + paddingLegend, (strokeLegend/2) + paddingLegend, widgetSize-paddingLegend-(strokeLegend/2), widgetSize-paddingLegend-(strokeLegend/2))
+        return rect
     }
 
     private fun updateLoadpointArc(it: EvccStateModel, canvas: Canvas) {
@@ -95,24 +138,16 @@ class MainEvccWidget(
         val loadpointName = it.result?.loadpoints?.first()?.title ?: ""
         val vehicleName = it.result?.loadpoints?.first()?.vehicleTitle ?: ""
 
-        val paint = Paint(Paint.FILTER_BITMAP_FLAG or Paint.DITHER_FLAG or Paint.ANTI_ALIAS_FLAG)
-        paint.strokeWidth = strokeEnergy
-        paint.style = Paint.Style.STROKE
-        paint.strokeCap = Paint.Cap.BUTT
-        paint.color = darkGreyColor
-
-        val arcLoadpoint = RectF()
-        arcLoadpoint.set((strokeEnergy/2) + paddingMiddle, (strokeEnergy/2) + paddingMiddle, widgetSize-paddingMiddle-(strokeEnergy/2), widgetSize-paddingMiddle-(strokeEnergy/2))
-
+        val paint = createArcPaint(darkGreyColor)
+        val isBelowMinSoc = vehicleSoC < minSoC
         val startAngleLoadpointArc = (180.0f - arcFullDegrees)/2.0f + 90
+        val arcLoadpoint = createEnergyRect()
+        val sweepAngleVehicleSoc = arcFullDegrees * vehicleSoC/100.0f
 
         canvas.drawArc(arcLoadpoint, startAngleLoadpointArc, arcFullDegrees, false, paint)
 
-        val isBelowMinSoc = vehicleSoC < minSoC
-
         val socColor = if (isCarConnected) ( if(isBelowMinSoc) orangeColor else greenColor) else lightGreyColor
 
-        val sweepAngleVehicleSoc = arcFullDegrees * vehicleSoC/100.0f
         drawLoadpointPart(
             startAngleLoadpointArc,
             sweepAngleVehicleSoc,
@@ -133,17 +168,9 @@ class MainEvccWidget(
     }
 
     private fun drawLoadpointLegend(loadpointName: String, vehicleName: String, canvas: Canvas) {
-        val paint = Paint(Paint.FILTER_BITMAP_FLAG or Paint.DITHER_FLAG or Paint.ANTI_ALIAS_FLAG)
-        paint.style = Paint.Style.FILL_AND_STROKE
-        paint.strokeCap = Paint.Cap.BUTT
-        paint.color = whiteColor
-        paint.strokeWidth = 0.25f
-        val typefaceMedium = ResourcesCompat.getFont(applicationContext, R.font.montserratmedium)
-        paint.typeface = typefaceMedium
-        paint.textSize = textSize
+        val paint = createFontPaint(whiteColor)
 
-        val arcLoadpointLegend = RectF()
-        arcLoadpointLegend.set((strokeLegend/2) + paddingLegend, (strokeLegend/2) + paddingLegend, widgetSize-paddingLegend-(strokeLegend/2), widgetSize-paddingLegend-(strokeLegend/2))
+        val arcLoadpointLegend = createLoadpointRect()
 
         with(canvas) {
             val path = Path()
@@ -157,26 +184,6 @@ class MainEvccWidget(
                 paint
             )
         }
-    }
-
-    private fun drawSocLine(angle: Float, targetSoC: Int, canvas: Canvas, lineColor: Int) {
-        val paint = Paint(Paint.FILTER_BITMAP_FLAG or Paint.DITHER_FLAG or Paint.ANTI_ALIAS_FLAG)
-        paint.style = Paint.Style.STROKE
-        paint.strokeCap = Paint.Cap.BUTT
-        paint.color = lineColor
-        paint.strokeWidth = strokeLegend
-
-        val rotateVectorYStart = widgetSize/2.0f - paddingMiddle
-        val rotateVectorYEnd = widgetSize/2.0f - paddingMiddle - strokeEnergy
-
-        val degreeOffset = 180.0 + (180.0 - arcFullDegrees.toDouble())/2.0
-        val rotatedXStart = widgetSize/2.0f + rotateVectorYStart * sin(Math.toRadians(angle.toDouble() + degreeOffset))
-        val rotatedYStart = widgetSize/2.0f - rotateVectorYStart * cos(Math.toRadians(angle.toDouble() + degreeOffset))
-        val rotatedXEnd = widgetSize/2.0f + rotateVectorYEnd * sin(Math.toRadians(angle.toDouble() + degreeOffset))
-        val rotatedYEnd = widgetSize/2.0f - rotateVectorYEnd * cos(Math.toRadians(angle.toDouble() + degreeOffset))
-
-        canvas.drawLine(rotatedXStart.toFloat(),rotatedYStart.toFloat(),rotatedXEnd.toFloat(),rotatedYEnd.toFloat(),paint)
-
     }
 
     private fun updatePowerDistributionArc(
@@ -312,19 +319,15 @@ class MainEvccWidget(
                                sweepAngle: Float,
                                resourceIds: List<Int>,
                                isInner: Boolean = false){
-        val paint = Paint(Paint.FILTER_BITMAP_FLAG or Paint.DITHER_FLAG or Paint.ANTI_ALIAS_FLAG)
-        paint.style = Paint.Style.STROKE
-        paint.strokeCap = Paint.Cap.BUTT
-        paint.color = whiteColor
-        paint.strokeWidth = strokeLegend
+        val paint = createLinePaint(whiteColor)
 
         val padding = if (isInner) 3*paddingLegend+strokeEnergy else paddingLegend+1
 
-        drawLine(padding, canvas,paint, startAngle, isInner)
+        drawLegendLine(padding, canvas,paint, startAngle, isInner)
 
         canvas.drawArc(rect, startAngle - arcFullDegrees/2.0f, sweepAngle, false, paint)
 
-        drawLine(padding, canvas,paint,startAngle + sweepAngle, isInner)
+        drawLegendLine(padding, canvas,paint,startAngle + sweepAngle, isInner)
 
         if(sweepAngle > iconSize * resourceIds.size) {
             val rotateVectorYStart = widgetSize / 2.0f - padding
@@ -336,8 +339,7 @@ class MainEvccWidget(
             val rotatedYStart =
                 widgetSize / 2.0f - rotateVectorYStart * cos(Math.toRadians(startAngle.toDouble() + degreeOffset + sweepAngle.toDouble() / 2.0))
 
-            paint.style = Paint.Style.FILL
-            paint.color = blackColor
+            val iconBackgroundPaint = createIconBackgroundPaint(blackColor)
 
             val iconRect = RectF()
             iconRect.set(
@@ -348,14 +350,18 @@ class MainEvccWidget(
             )
 
             for(resourceId in resourceIds){
-                canvas.drawRect(iconRect, paint)
+                canvas.drawRect(iconRect, iconBackgroundPaint)
 
                 val svg = SVG.getFromResource(resources, resourceId)
                 svg.documentHeight = iconSize
                 svg.documentWidth = iconSize
                 svg.renderToCanvas(canvas, iconRect)
 
-                iconRect.set(iconRect.left,iconRect.top-iconSize,iconRect.right,iconRect.bottom-iconSize)
+                iconRect.set(
+                    iconRect.left,
+                    iconRect.top-iconSize,
+                    iconRect.right,
+                    iconRect.bottom-iconSize)
             }
         }
     }
@@ -368,34 +374,23 @@ class MainEvccWidget(
         color: Int,
         power: Int
     ) {
-        val paint = Paint(Paint.FILTER_BITMAP_FLAG or Paint.DITHER_FLAG or Paint.ANTI_ALIAS_FLAG)
-        paint.strokeWidth = strokeEnergy
-        paint.style = Paint.Style.STROKE
-        paint.strokeCap = Paint.Cap.BUTT
-        paint.color = color
+        val paint = createArcPaint(color)
+        val sAngle = startAngle - arcFullDegrees/2.0f
 
-        canvas.drawArc(rect, startAngle - arcFullDegrees/2.0f, sweepAngle, false, paint)
+        canvas.drawArc(rect, sAngle, sweepAngle, false, paint)
 
         if(sweepAngle > 30.0f) {
-            paint.color = blackColor
-            paint.strokeWidth = 0.25f
-            paint.style = Paint.Style.FILL_AND_STROKE
-            paint.strokeCap = Paint.Cap.ROUND
-            val typefaceMedium = ResourcesCompat.getFont(applicationContext, R.font.montserratmedium)
-            paint.typeface = typefaceMedium
-            paint.textSize = textSize
+            val textPaint = createFontPaint(blackColor)
 
-            //val strokeLength = Math.PI * (rect.width() - strokeEnergy) * sweepAngle / 360.0 * 0.5
             with(canvas) {
                 val path = Path()
-                path.addArc(rect, startAngle - arcFullDegrees/2.0f, sweepAngle)
-                val powerString = createPowerString(power)
+                path.addArc(rect, sAngle, sweepAngle)
                 drawTextOnPath(
-                    powerString,
+                    createPowerString(power),
                     path,
-                    5.0f,//strokeLength.toFloat() + if(power>1000) 5.0f else 0.0f,
+                    5.0f,
                     strokeEnergy / 5.0f,
-                    paint
+                    textPaint
                 )
             }
         }
@@ -410,34 +405,22 @@ class MainEvccWidget(
         soc: Int,
         isCharging: Boolean
     ) {
-        val paint = Paint(Paint.FILTER_BITMAP_FLAG or Paint.DITHER_FLAG or Paint.ANTI_ALIAS_FLAG)
-        paint.strokeWidth = strokeEnergy
-        paint.style = Paint.Style.STROKE
-        paint.strokeCap = Paint.Cap.BUTT
-        paint.color = color
+        val paint = createArcPaint(color)
 
         canvas.drawArc(rect, startAngle, sweepAngle, false, paint)
 
         if(sweepAngle > 30.0f) {
-            paint.color = blackColor
-            paint.strokeWidth = 0.25f
-            paint.style = Paint.Style.FILL_AND_STROKE
-            paint.strokeCap = Paint.Cap.ROUND
-            val typefaceMedium = ResourcesCompat.getFont(applicationContext, R.font.montserratmedium)
-            paint.typeface = typefaceMedium
-            paint.textSize = textSize
+            val textPaint = createFontPaint(blackColor)
 
-            //val strokeLength = Math.PI * (rect.width() - strokeEnergy) * sweepAngle / 360.0 * 0.5
-            with(canvas) {
+           with(canvas) {
                 val path = Path()
                 path.addArc(rect, startAngle+sweepAngle, -sweepAngle)
-                val socString = "$soc %"
                 drawTextOnPath(
-                    socString,
+                    "$soc %",
                     path,
-                    20.0f,//strokeLength.toFloat() + if(power>1000) 5.0f else 0.0f,
+                    20.0f,
                     strokeEnergy / 5.0f,
-                    paint
+                    textPaint
                 )
             }
         }
@@ -450,7 +433,16 @@ class MainEvccWidget(
         return if(value > 1000) "${(value.toFloat()/1000.0f).format(1)} W" else "$value W"
     }
 
-    private fun drawLine(
+    private fun drawSocLine(angle: Float, targetSoC: Int, canvas: Canvas, lineColor: Int) {
+        val paint = createLinePaint(lineColor)
+
+        val rotateVectorYStart = widgetSize/2.0f - paddingMiddle
+        val rotateVectorYEnd = widgetSize/2.0f - paddingMiddle - strokeEnergy
+
+        drawLine(canvas,paint,angle,rotateVectorYStart,rotateVectorYEnd,false)
+    }
+
+    private fun drawLegendLine(
         padding: Float,
         canvas: Canvas,
         paint: Paint,
@@ -461,12 +453,34 @@ class MainEvccWidget(
         val rotateVectorYStart = widgetSize/2.0f - padding
         val rotateVectorYEnd = widgetSize/2.0f - (padding + offset)
 
-        val degreeOffset = (180.0 - arcFullDegrees.toDouble())/2.0
-        val rotatedXStart = widgetSize/2.0f + rotateVectorYStart * sin(Math.toRadians(angle.toDouble() + degreeOffset))
-        val rotatedYStart = widgetSize/2.0f - rotateVectorYStart * cos(Math.toRadians(angle.toDouble() + degreeOffset))
-        val rotatedXEnd = widgetSize/2.0f + rotateVectorYEnd * sin(Math.toRadians(angle.toDouble() + degreeOffset))
-        val rotatedYEnd = widgetSize/2.0f - rotateVectorYEnd * cos(Math.toRadians(angle.toDouble() + degreeOffset))
+        drawLine(canvas,paint,angle,rotateVectorYStart,rotateVectorYEnd)
+    }
 
-        canvas.drawLine(rotatedXStart.toFloat(),rotatedYStart.toFloat(),rotatedXEnd.toFloat(),rotatedYEnd.toFloat(),paint)
+    private fun drawLine(
+        canvas: Canvas,
+        paint: Paint,
+        angle: Float = 0.0f,
+        yStart: Float,
+        yEnd: Float,
+        rightSide:Boolean = true
+    ) {
+        val rotatedXStart = rotateX(yStart,angle,rightSide)
+        val rotatedYStart = rotateY(yStart,angle,rightSide)
+        val rotatedXEnd = rotateX(yEnd,angle,rightSide)
+        val rotatedYEnd = rotateY(yEnd,angle,rightSide)
+
+        canvas.drawLine(rotatedXStart,rotatedYStart,rotatedXEnd,rotatedYEnd,paint)
+    }
+
+    private fun rotateX(y:Float,angle:Float,rightSide:Boolean = true):Float {
+        val sideOffset = if (rightSide) 0.0 else 180.0
+        val degreeOffset = sideOffset + (180.0 - arcFullDegrees.toDouble())/2.0
+        return widgetSize/2.0f + y * sin(Math.toRadians(angle.toDouble() + degreeOffset)).toFloat()
+    }
+
+    private fun rotateY(y:Float,angle:Float,rightSide:Boolean = true):Float {
+        val sideOffset = if (rightSide) 0.0 else 180.0
+        val degreeOffset = sideOffset + (180.0 - arcFullDegrees.toDouble())/2.0
+        return widgetSize/2.0f - y * cos(Math.toRadians(angle.toDouble() + degreeOffset)).toFloat()
     }
 }
