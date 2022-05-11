@@ -262,12 +262,12 @@ class MainEvccWidget(
             arcOuterLegend,
             sweepAnglePvProduction,
             sweepAngleBatteryDischarge,
-            listOf(batteryIconId, R.raw.anglesup))
+            listOf(R.raw.anglesup,batteryIconId))
         drawLegendPart(canvas,
             arcOuterLegend,
             sweepAnglePvProduction + sweepAngleBatteryDischarge,
             sweepAngleGridPower,
-            listOf(R.raw.grid,R.raw.anglesup))
+            listOf(R.raw.anglesup,R.raw.grid))
 
         //draw inner elements
         val sweepAngleHomePower = arcFullDegrees * homePower/(consumption+pvExport)
@@ -285,7 +285,7 @@ class MainEvccWidget(
             arcInnerLegend,
             sweepAngleHomePower,
             sweepAngleBatteryChargePower,
-            listOf(batteryIconId,R.raw.anglesdown),
+            listOf(R.raw.anglesdown,batteryIconId),
             true)
 
         drawLegendPart(canvas,
@@ -299,7 +299,7 @@ class MainEvccWidget(
             arcInnerLegend,
             sweepAngleHomePower + sweepAngleBatteryChargePower + sweepAngleLoadpointChargePower,
             sweepAnglePvExport,
-            listOf(R.raw.grid,R.raw.anglesdown),
+            listOf(R.raw.anglesdown,R.raw.grid),
             true)
     }
 
@@ -334,34 +334,31 @@ class MainEvccWidget(
 
             val degreeOffset = (180.0 - arcFullDegrees.toDouble())/2.0
 
-            val rotatedXStart =
-                widgetSize / 2.0f + rotateVectorYStart * sin(Math.toRadians(startAngle.toDouble() + degreeOffset + sweepAngle.toDouble() / 2.0))
-            val rotatedYStart =
-                widgetSize / 2.0f - rotateVectorYStart * cos(Math.toRadians(startAngle.toDouble() + degreeOffset + sweepAngle.toDouble() / 2.0))
+            val degreesPerIcon = 13.0
+            val rotationAngleStartInDegree = startAngle.toDouble() + degreeOffset+ sweepAngle.toDouble() / 2.0 - (degreesPerIcon * (resourceIds.size - 1))/2.0
 
-            val iconBackgroundPaint = createIconBackgroundPaint(blackColor)
+            for((index,resourceId) in resourceIds.withIndex()){
+                val rotationAngleRad = Math.toRadians(rotationAngleStartInDegree + index*degreesPerIcon)
 
-            val iconRect = RectF()
-            iconRect.set(
-                rotatedXStart.toFloat() - iconSize/2.0f,
-                rotatedYStart.toFloat() - iconSize/2.0f,
-                rotatedXStart.toFloat() + iconSize/2.0f,
-                rotatedYStart.toFloat() + iconSize/2.0f
-            )
+                val rotatedXStart = widgetSize / 2.0f + rotateVectorYStart * sin(rotationAngleRad)
+                val rotatedYStart = widgetSize / 2.0f - rotateVectorYStart * cos(rotationAngleRad)
 
-            for(resourceId in resourceIds){
+                val iconBackgroundPaint = createIconBackgroundPaint(blackColor)
+
+                val iconRect = RectF()
+                iconRect.set(
+                    rotatedXStart.toFloat() - iconSize/2.0f,
+                    rotatedYStart.toFloat() - iconSize/2.0f,
+                    rotatedXStart.toFloat() + iconSize/2.0f,
+                    rotatedYStart.toFloat() + iconSize/2.0f
+                )
+
                 canvas.drawRect(iconRect, iconBackgroundPaint)
 
                 val svg = SVG.getFromResource(resources, resourceId)
                 svg.documentHeight = iconSize
                 svg.documentWidth = iconSize
                 svg.renderToCanvas(canvas, iconRect)
-
-                iconRect.set(
-                    iconRect.left,
-                    iconRect.top-iconSize,
-                    iconRect.right,
-                    iconRect.bottom-iconSize)
             }
         }
     }
