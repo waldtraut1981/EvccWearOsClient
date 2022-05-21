@@ -1,5 +1,9 @@
 package de.wagner_wedtlenstedt.evccwearosclient
 
+import android.net.ConnectivityManager
+import android.net.Network
+import android.net.NetworkCapabilities
+import android.net.NetworkRequest
 import android.os.Build
 import android.os.Bundle
 import android.util.DisplayMetrics
@@ -34,6 +38,25 @@ class MainActivity : ComponentActivity(){
         mainEvccWidget = MainEvccWidget(widgetSize, binding.imageView, applicationContext, resources)
 
         vm = ViewModelProvider(this)[EvccViewModel::class.java]
+
+        val connectivityManager = getSystemService(ConnectivityManager::class.java)
+
+        val callback = object : ConnectivityManager.NetworkCallback() {
+            override fun onAvailable(network: Network) {
+                super.onAvailable(network)
+                // The Wi-Fi network has been acquired, bind it to use this network by default
+                connectivityManager.bindProcessToNetwork(network)
+            }
+
+            override fun onLost(network: Network) {
+                super.onLost(network)
+                // The Wi-Fi network has been disconnected
+            }
+        }
+        connectivityManager.requestNetwork(
+            NetworkRequest.Builder().addTransportType(NetworkCapabilities.TRANSPORT_WIFI).build(),
+            callback
+        )
 
         vm.getEvccLiveData()?.observe(this) {
             if (it != null) {

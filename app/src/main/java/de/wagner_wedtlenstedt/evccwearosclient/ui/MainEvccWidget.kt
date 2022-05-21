@@ -10,10 +10,7 @@ import androidx.core.content.res.ResourcesCompat.getFont
 import com.caverock.androidsvg.SVG
 import de.wagner_wedtlenstedt.evccwearosclient.R
 import de.wagner_wedtlenstedt.evccwearosclient.data.EvccStateModel
-import kotlin.math.abs
-import kotlin.math.cos
-import kotlin.math.min
-import kotlin.math.sin
+import kotlin.math.*
 
 class MainEvccWidget(
     private val widgetSize: Float,
@@ -334,7 +331,7 @@ class MainEvccWidget(
 
             val degreeOffset = (180.0 - arcFullDegrees.toDouble())/2.0
 
-            val degreesPerIcon = 13.0
+            val degreesPerIcon = atan(iconSize.toDouble()/rotateVectorYStart)
             val rotationAngleStartInDegree = startAngle.toDouble() + degreeOffset+ sweepAngle.toDouble() / 2.0 - (degreesPerIcon * (resourceIds.size - 1))/2.0
 
             for((index,resourceId) in resourceIds.withIndex()){
