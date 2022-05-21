@@ -16,8 +16,8 @@ class ApiClient {
                 .setLenient()
                 .create()
             val okHttpClient = OkHttpClient.Builder()
-                .readTimeout(3, TimeUnit.SECONDS)
-                .connectTimeout(3, TimeUnit.SECONDS)
+                .readTimeout(10, TimeUnit.SECONDS)
+                .connectTimeout(10, TimeUnit.SECONDS)
                 //.dns(Dns())
                 .build()
             if (retrofit == null) {

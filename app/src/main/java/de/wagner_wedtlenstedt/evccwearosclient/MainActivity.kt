@@ -7,6 +7,7 @@ import android.net.NetworkRequest
 import android.os.Build
 import android.os.Bundle
 import android.util.DisplayMetrics
+import android.view.View.GONE
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.annotation.RequiresApi
@@ -29,6 +30,8 @@ class MainActivity : ComponentActivity(){
 
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
+
+        val progressBar = binding.progressBar
 
         val outMetrics = DisplayMetrics()
         baseContext.display?.getMetrics(outMetrics)
@@ -60,6 +63,7 @@ class MainActivity : ComponentActivity(){
 
         vm.getEvccLiveData()?.observe(this) {
             if (it != null) {
+                progressBar.visibility = GONE
                 mainEvccWidget.update(it)
             } else {
                 showToast()
