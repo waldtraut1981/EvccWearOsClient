@@ -331,7 +331,7 @@ class MainEvccWidget(
 
             val degreeOffset = (180.0 - arcFullDegrees.toDouble())/2.0
 
-            val degreesPerIcon = atan(iconSize.toDouble()/rotateVectorYStart)
+            val degreesPerIcon = atan(iconSize.toDouble()/rotateVectorYStart) * 180.0 / Math.PI
             val rotationAngleStartInDegree = startAngle.toDouble() + degreeOffset+ sweepAngle.toDouble() / 2.0 - (degreesPerIcon * (resourceIds.size - 1))/2.0
 
             for((index,resourceId) in resourceIds.withIndex()){
