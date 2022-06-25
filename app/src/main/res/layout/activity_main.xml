@@ -2,8 +2,8 @@
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="match_parent"
-    android:layout_height="500dp"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
     android:fadeScrollbars="true"
     android:orientation="vertical"
     android:padding="@dimen/box_inset_layout_padding"
@@ -11,38 +11,339 @@
     tools:context=".MainActivity"
     tools:ignore="SpeakableTextPresentCheck">
 
-    <androidx.constraintlayout.widget.ConstraintLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content">
-
-        <ProgressBar
-            android:id="@+id/progressBar"
-            style="?android:attr/progressBarStyle"
-            android:layout_width="113dp"
-            android:layout_height="113dp"
-            android:layout_marginStart="62dp"
-            android:layout_marginTop="50dp"
-            android:layout_marginEnd="61dp"
-            android:visibility="visible"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="0.0"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/imageView"
-            app:layout_constraintVertical_bias="0.0" />
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
 
         <ImageView
             android:id="@+id/imageView"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:contentDescription="@string/mainview"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintVertical_bias="0.0"
-            tools:ignore="ImageContrastCheck"
-            tools:src="@tools:sample/avatars" />
+            tools:ignore="ImageContrastCheck" />
 
-    </androidx.constraintlayout.widget.ConstraintLayout>
+        <LinearLayout
+            android:id="@+id/textLayoutContainer1"
+            android:layout_width="240dp"
+            android:layout_height="30dp"
+            android:orientation="horizontal"
+            android:visibility="gone">
+
+            <TextView
+                android:id="@+id/textViewInLeft"
+                android:layout_width="100dp"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="20dp"
+                android:fontFamily="@font/montserratbold"
+                android:lineSpacingExtra="16sp"
+                android:text="@string/in"
+                android:textAlignment="textEnd"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:typeface="normal" />
+
+            <TextView
+                android:id="@+id/textViewInRight"
+                android:layout_width="100dp"
+                android:layout_height="match_parent"
+                android:fontFamily="@font/montserratbold"
+                android:text="@string/invalue"
+                android:textAlignment="textStart"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:typeface="normal" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/textLayoutContainer2"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="horizontal"
+            android:visibility="gone">
+
+            <TextView
+                android:id="@+id/textViewErzeugung"
+                android:layout_width="80dp"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="10dp"
+                android:fontFamily="@font/montserratmedium"
+                android:text="@string/erzeugung"
+                android:textAlignment="textEnd"
+                android:textSize="12sp" />
+
+            <ImageView
+                android:id="@+id/imageViewSun"
+                android:layout_width="20dp"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="10dp"
+                android:contentDescription="@string/description"
+                android:src="@drawable/ic_sun" />
+
+            <TextView
+                android:id="@+id/textViewErzeugungsValue"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:fontFamily="@font/montserratmedium"
+                android:textAlignment="textStart"
+                android:textSize="12sp" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/textLayoutContainer3"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="horizontal"
+            tools:visibility="gone">
+
+            <TextView
+                android:id="@+id/textViewBatterieEntladung"
+                android:layout_width="80dp"
+                android:layout_height="match_parent"
+                android:layout_marginEnd="10dp"
+                android:fontFamily="@font/montserratmedium"
+                android:gravity="end|center_vertical"
+                android:text="@string/batterie_entladung"
+                android:textSize="12sp" />
+
+            <ImageView
+                android:id="@+id/imageViewBatterie"
+                android:layout_width="20dp"
+                android:layout_height="match_parent"
+                android:layout_marginEnd="10dp"
+                android:contentDescription="@string/description"
+                android:src="@drawable/ic_batteryhalf" />
+
+            <TextView
+                android:id="@+id/textViewBatterieEntladungValue"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:fontFamily="@font/montserratmedium"
+                android:gravity="start|center_vertical"
+                android:textSize="12sp" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/textLayoutContainer4"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="horizontal"
+            android:visibility="visible">
+
+            <TextView
+                android:id="@+id/textViewNetzbezug"
+                android:layout_width="80dp"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="10dp"
+                android:fontFamily="@font/montserratmedium"
+                android:text="@string/netzbezug"
+                android:textAlignment="textEnd"
+                android:textSize="12sp" />
+
+            <ImageView
+                android:id="@+id/imageViewGrid"
+                android:layout_width="20dp"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="10dp"
+                android:contentDescription="@string/description"
+                android:src="@drawable/ic_grid" />
+
+            <TextView
+                android:id="@+id/textViewNetzbezugValue"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:fontFamily="@font/montserratmedium"
+                android:textAlignment="textStart"
+                android:textSize="12sp" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/textLayoutContainer5"
+            android:layout_width="240dp"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:paddingTop="20dp"
+            android:visibility="visible">
+
+            <TextView
+                android:id="@+id/textViewOutLeft"
+                android:layout_width="100dp"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="20dp"
+                android:fontFamily="@font/montserratbold"
+                android:lineSpacingExtra="16sp"
+                android:text="@string/out"
+                android:textAlignment="textEnd"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:typeface="normal" />
+
+            <TextView
+                android:id="@+id/textViewOutRight"
+                android:layout_width="100dp"
+                android:layout_height="match_parent"
+                android:fontFamily="@font/montserratbold"
+                android:text="@string/outvalue"
+                android:textAlignment="textStart"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:typeface="normal" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/textLayoutContainer6"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="horizontal"
+            android:visibility="gone">
+
+            <TextView
+                android:id="@+id/textViewVerbrauch"
+                android:layout_width="80dp"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="10dp"
+                android:fontFamily="@font/montserratmedium"
+                android:text="@string/verbrauch"
+                android:textAlignment="textEnd"
+                android:textSize="12sp" />
+
+            <ImageView
+                android:id="@+id/imageViewHouse"
+                android:layout_width="20dp"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="10dp"
+                android:contentDescription="@string/description"
+                android:src="@drawable/ic_house" />
+
+            <TextView
+                android:id="@+id/textViewHouseValue"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:fontFamily="@font/montserratmedium"
+                android:textAlignment="textStart"
+                android:textSize="12sp" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/textLayoutContainer7"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="horizontal"
+            tools:visibility="gone">
+
+            <TextView
+                android:id="@+id/textViewLadepunkt"
+                android:layout_width="80dp"
+                android:layout_height="match_parent"
+                android:layout_marginEnd="10dp"
+                android:fontFamily="@font/montserratmedium"
+                android:gravity="end|center_vertical"
+                android:text="@string/ladepunnkt"
+                android:textSize="12sp" />
+
+            <ImageView
+                android:id="@+id/imageViewAuto"
+                android:layout_width="20dp"
+                android:layout_height="match_parent"
+                android:layout_marginEnd="10dp"
+                android:contentDescription="@string/description"
+                android:src="@drawable/ic_car" />
+
+            <TextView
+                android:id="@+id/textViewLadepunktValue"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:fontFamily="@font/montserratmedium"
+                android:gravity="start|center_vertical"
+                android:textSize="12sp" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/textLayoutContainer8"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="horizontal"
+            android:visibility="gone">
+
+            <TextView
+                android:id="@+id/textViewBatterieLaden"
+                android:layout_width="80dp"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="10dp"
+                android:fontFamily="@font/montserratmedium"
+                android:text="@string/batterie_laden"
+                android:textAlignment="textEnd"
+                android:textSize="12sp" />
+
+            <ImageView
+                android:id="@+id/imageViewBatterieLaden"
+                android:layout_width="20dp"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="10dp"
+                android:contentDescription="@string/description"
+                android:src="@drawable/ic_batteryhalf" />
+
+            <TextView
+                android:id="@+id/textViewBatterieLadenValue"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:fontFamily="@font/montserratmedium"
+                android:textAlignment="textStart"
+                android:textSize="12sp" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/textLayoutContainer9"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="horizontal"
+            android:visibility="gone">
+
+            <TextView
+                android:id="@+id/textViewEinspeisung"
+                android:layout_width="80dp"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="10dp"
+                android:fontFamily="@font/montserratmedium"
+                android:text="@string/einspeisung"
+                android:textAlignment="textEnd"
+                android:textSize="12sp" />
+
+            <ImageView
+                android:id="@+id/imageViewEinspeisung"
+                android:layout_width="20dp"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="10dp"
+                android:contentDescription="@string/description"
+                android:src="@drawable/ic_grid" />
+
+            <TextView
+                android:id="@+id/textViewEinspeisungValue"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:fontFamily="@font/montserratmedium"
+                android:textAlignment="textStart"
+                android:textSize="12sp" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="191dp"
+            android:orientation="horizontal"></LinearLayout>
+
+    </LinearLayout>
 </ScrollView>

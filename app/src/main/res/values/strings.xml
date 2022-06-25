@@ -9,4 +9,16 @@
     <string name="tile_description">EvccTile</string>
     <string name="mainevccview">mainEvccView</string>
     <string name="mainview">mainView</string>
+    <string name="in">In</string>
+    <string name="invalue">inValue</string>
+    <string name="erzeugung">Erzeugung</string>
+    <string name="batterie_entladung">Batterie entladung</string>
+    <string name="netzbezug">Netzbezug</string>
+    <string name="description">description</string>
+    <string name="out">Out</string>
+    <string name="verbrauch">Verbrauch</string>
+    <string name="ladepunnkt">Ladepunnkt</string>
+    <string name="outvalue">...</string>
+    <string name="batterie_laden">Batterie laden</string>
+    <string name="einspeisung">Einspeisung</string>
 </resources>

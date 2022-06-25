@@ -112,6 +112,37 @@ class MainEvccWidget(
 
         canvas.drawText(mode,xPosition,widgetSize/2.0f - textSize,paintBold)
         canvas.drawText("$vehicleRange km",xPosition,widgetSize/2.0f + 2*textSize,paintBold)
+
+        val connected = it.result?.loadpoints?.first()?.connected ?: false
+        val charging = it.result?.loadpoints?.first()?.charging?: false
+
+        val iconRect = RectF()
+
+        val xValue = widgetSize/2.0f - widgetSize * 0.2f
+        val yValue = widgetSize/2.0f
+
+        iconRect.set(
+            xValue - iconSize/2.0f,
+            yValue - iconSize/2.0f,
+            xValue + iconSize/2.0f,
+            yValue + iconSize/2.0f
+        )
+
+        var svg: SVG
+
+        if(connected){
+            if(charging){
+                svg = SVG.getFromResource(resources, R.raw.lightning)
+            } else {
+                svg = SVG.getFromResource(resources, R.raw.car)
+            }
+        } else {
+            svg = SVG.getFromResource(resources, R.raw.cablecharge)
+        }
+
+        svg.documentHeight = iconSize
+        svg.documentWidth = iconSize
+        svg.renderToCanvas(canvas, iconRect)
     }
 
     private fun createEnergyRect(): RectF {

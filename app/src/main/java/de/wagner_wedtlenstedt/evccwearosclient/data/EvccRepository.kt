@@ -39,6 +39,4 @@ class EvccRepository {
     }
 
     fun getEvccLiveData() = data
-
-    fun getHomePower() = data.value?.result?.homePower
 }
