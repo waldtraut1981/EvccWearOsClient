@@ -18,6 +18,7 @@ import de.wagner_wedtlenstedt.evccwearosclient.viewmodel.EvccViewModel
 import kotlin.math.abs
 import kotlin.math.min
 import android.view.View.VISIBLE
+import kotlin.math.max
 
 
 class MainActivity : ComponentActivity(){
@@ -92,21 +93,21 @@ class MainActivity : ComponentActivity(){
         binding.textLayoutContainer8.visibility = VISIBLE
         binding.textLayoutContainer9.visibility = VISIBLE
 
-        val homePower = it.result?.homePower ?: 0
-        val batteryPower = it.result?.batteryPower ?: 0
-        val loadpointChargePower = it.result?.loadpoints?.first()?.chargePower ?: 0
-        val gridPower = it.result?.gridPower ?: 0
+        val homePower = it.result?.homePower ?: 0.0f
+        val batteryPower = it.result?.batteryPower ?: 0.0f
+        val loadpointChargePower = it.result?.loadpoints?.first()?.chargePower ?: 0.0f
+        val gridPower = it.result?.gridPower ?: 0.0f
         val isPvConfigured = it.result?.pvConfigured ?: false
-        val pvPower = it.result?.pvPower ?: 0
+        val pvPower = it.result?.pvPower ?: 0.0f
         val homeBatterySoc = it.result?.batterySoC ?: 0
 
-        val gridImport = Integer.max(0, gridPower)
-        val pvExport = Integer.max(0, gridPower * -1)
+        val gridImport = max(0.0f, gridPower)
+        val pvExport = max(0.0f, gridPower * -1.0f)
         val pvProduction = if (isPvConfigured) abs(pvPower) else pvExport
 
-        val batteryPowerAdjusted = if (abs(batteryPower) < batteryPowerThreshold) 0 else batteryPower
-        val batteryDischarge = Integer.max(0, batteryPowerAdjusted)
-        val batteryCharge = min(0, batteryPowerAdjusted) * -1
+        val batteryPowerAdjusted = if (abs(batteryPower) < batteryPowerThreshold) 0.0f else batteryPower
+        val batteryDischarge = maxOf(0.0f, batteryPowerAdjusted)
+        val batteryCharge = minOf(0.0f, batteryPowerAdjusted) * -1.0f
 
         val ownPower = batteryDischarge + pvProduction
         val consumption = homePower + batteryCharge + loadpointChargePower

@@ -218,22 +218,22 @@ class MainEvccWidget(
         evccStateModel: EvccStateModel,
         canvas: Canvas
     ) {
-        val homePower = evccStateModel.result?.homePower ?: 0
-        val batteryPower = evccStateModel.result?.batteryPower ?: 0
-        val loadpointChargePower = evccStateModel.result?.loadpoints?.first()?.chargePower ?: 0
-        val gridPower = evccStateModel.result?.gridPower ?: 0
+        val homePower = evccStateModel.result?.homePower ?: 0.0f
+        val batteryPower = evccStateModel.result?.batteryPower ?: 0.0f
+        val loadpointChargePower = evccStateModel.result?.loadpoints?.first()?.chargePower ?: 0.0f
+        val gridPower = evccStateModel.result?.gridPower ?: 0.0f
         val isPvConfigured = evccStateModel.result?.pvConfigured ?: false
-        val pvPower = evccStateModel.result?.pvPower ?: 0
+        val pvPower = evccStateModel.result?.pvPower ?: 0.0f
         val homeBatterySoc = evccStateModel.result?.batterySoC ?: 0
         val batteryIconId = getBatteryIcon(homeBatterySoc)
 
-        val gridImport = Integer.max(0, gridPower)
-        val pvExport = Integer.max(0, gridPower * -1)
+        val gridImport = max(0.0f, gridPower)
+        val pvExport = max(0.0f, gridPower * -1.0f)
         val pvProduction = if (isPvConfigured) abs(pvPower) else pvExport
 
-        val batteryPowerAdjusted = if (abs(batteryPower) < batteryPowerThreshold) 0 else batteryPower
-        val batteryDischarge = Integer.max(0, batteryPowerAdjusted)
-        val batteryCharge = min(0, batteryPowerAdjusted) * -1
+        val batteryPowerAdjusted = if (abs(batteryPower) < batteryPowerThreshold) 0.0f else batteryPower
+        val batteryDischarge = max(0.0f, batteryPowerAdjusted)
+        val batteryCharge = min(0.0f, batteryPowerAdjusted) * -1.0f
 
         val ownPower = batteryDischarge + pvProduction
         val consumption = homePower + batteryCharge + loadpointChargePower
@@ -397,7 +397,7 @@ class MainEvccWidget(
         canvas: Canvas,
         rect: RectF,
         color: Int,
-        power: Int
+        power: Float
     ) {
         val paint = createArcPaint(color)
         val sAngle = startAngle - arcFullDegrees/2.0f
@@ -454,8 +454,8 @@ class MainEvccWidget(
     private fun Float.format(digits: Int) = "%.${digits}f".format(this)
 
 
-    private fun createPowerString(value: Int):String {
-        return if(value > 1000) "${(value.toFloat()/1000.0f).format(1)} W" else "$value W"
+    private fun createPowerString(value: Float):String {
+        return if(value > 1000) "${(value/1000.0f).format(1)} W" else "$value W"
     }
 
     private fun drawSocLine(angle: Float, targetSoC: Int, canvas: Canvas, lineColor: Int) {
