@@ -46,25 +46,6 @@ class MainActivity : ComponentActivity(){
 
         vm = ViewModelProvider(this)[EvccViewModel::class.java]
 
-        val connectivityManager = getSystemService(ConnectivityManager::class.java)
-
-        val callback = object : ConnectivityManager.NetworkCallback() {
-            override fun onAvailable(network: Network) {
-                super.onAvailable(network)
-                // The Wi-Fi network has been acquired, bind it to use this network by default
-                connectivityManager.bindProcessToNetwork(network)
-            }
-
-            override fun onLost(network: Network) {
-                super.onLost(network)
-                // The Wi-Fi network has been disconnected
-            }
-        }
-        connectivityManager.requestNetwork(
-            NetworkRequest.Builder().addTransportType(NetworkCapabilities.TRANSPORT_WIFI).build(),
-            callback
-        )
-
         vm.getEvccLiveData()?.observe(this) {
             if (it != null) {
                 mainEvccWidget.update(it)
