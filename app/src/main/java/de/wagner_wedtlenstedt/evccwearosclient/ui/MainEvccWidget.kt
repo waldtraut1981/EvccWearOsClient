@@ -36,6 +36,7 @@ class MainEvccWidget(
     private var iconSize = 20.0f
     private val arcFullDegrees = 170.0f
     private var leftPaddingCenterText = 20.0f
+    private val startAngleLoadpointArc = (180.0f - arcFullDegrees)/2.0f + 90
 
     private var textSize = 12.0f
 
@@ -128,16 +129,14 @@ class MainEvccWidget(
             yValue + iconSize/2.0f
         )
 
-        var svg: SVG
-
-        if(connected){
+        val svg: SVG = if(connected){
             if(charging){
-                svg = SVG.getFromResource(resources, R.raw.lightning)
+                SVG.getFromResource(resources, R.raw.lightning)
             } else {
-                svg = SVG.getFromResource(resources, R.raw.car)
+                SVG.getFromResource(resources, R.raw.car)
             }
         } else {
-            svg = SVG.getFromResource(resources, R.raw.cablecharge)
+            SVG.getFromResource(resources, R.raw.cablecharge)
         }
 
         svg.documentHeight = iconSize
@@ -159,37 +158,34 @@ class MainEvccWidget(
 
     private fun updateLoadpointArc(it: EvccStateModel, canvas: Canvas) {
         val isCarConnected = it.result?.loadpoints?.first()?.connected ?: false
-        val isCharging = it.result?.loadpoints?.first()?.enabled ?: false
-        val vehicleSoC = it.result?.loadpoints?.first()?.vehicleSoC ?: 0
-        val minSoC = it.result?.loadpoints?.first()?.minSoC ?: 0
-        val targetSoC = it.result?.loadpoints?.first()?.targetSoC ?: 0
+        val vehicleSoc = it.result?.loadpoints?.first()?.vehicleSoc ?: 0
+        val minSoc = it.result?.loadpoints?.first()?.minSoc ?: 0
+        val targetSoc = it.result?.loadpoints?.first()?.targetSoc ?: 0
         val loadpointName = it.result?.loadpoints?.first()?.title ?: ""
         val vehicleName = it.result?.loadpoints?.first()?.vehicleTitle ?: ""
 
         val paint = createArcPaint(darkGreyColor)
-        val isBelowMinSoc = vehicleSoC < minSoC
-        val startAngleLoadpointArc = (180.0f - arcFullDegrees)/2.0f + 90
+        val isBelowMinSoc = vehicleSoc < minSoc
+
         val arcLoadpoint = createEnergyRect()
-        val sweepAngleVehicleSoc = arcFullDegrees * vehicleSoC/100.0f
+        val sweepAngleVehicleSoc = arcFullDegrees * vehicleSoc/100.0f
 
         canvas.drawArc(arcLoadpoint, startAngleLoadpointArc, arcFullDegrees, false, paint)
 
         val socColor = if (isCarConnected) ( if(isBelowMinSoc) orangeColor else greenColor) else lightGreyColor
 
         drawLoadpointPart(
-            startAngleLoadpointArc,
             sweepAngleVehicleSoc,
             canvas,
             arcLoadpoint,
             socColor,
-            vehicleSoC,
-            isCharging
+            vehicleSoc
         )
 
-        drawSocLine(arcFullDegrees*targetSoC/100,targetSoC,canvas,whiteColor)
+        drawSocLine(arcFullDegrees*targetSoc/100,canvas,whiteColor)
 
         if(isBelowMinSoc){
-            drawSocLine(arcFullDegrees*minSoC/100,targetSoC,canvas,orangeColor)
+            drawSocLine(arcFullDegrees*minSoc/100,canvas,orangeColor)
         }
 
         drawLoadpointLegend(loadpointName,vehicleName,canvas)
@@ -248,9 +244,9 @@ class MainEvccWidget(
         arcOuterLegend.set((strokeLegend/2) + paddingLegend, (strokeLegend/2) + paddingLegend, widgetSize-paddingLegend-(strokeLegend/2), widgetSize-paddingLegend-(strokeLegend/2))
         arcInnerLegend.set((strokeLegend/2) + paddingInner, (strokeLegend/2) + paddingInner, widgetSize-paddingInner-(strokeLegend/2), widgetSize-paddingInner-(strokeLegend/2))
 
-        val sweepAngleSelfConsumption = arcFullDegrees * selfConsumption.toFloat()/overallPowerConsumptions.toFloat()
-        val sweepAnglePvExport = arcFullDegrees * pvExport.toFloat()/overallPowerConsumptions.toFloat()
-        val sweepAngleGridImport = arcFullDegrees * gridImport.toFloat()/overallPowerConsumptions.toFloat()
+        val sweepAngleSelfConsumption = arcFullDegrees * selfConsumption / overallPowerConsumptions
+        val sweepAnglePvExport = arcFullDegrees * pvExport / overallPowerConsumptions
+        val sweepAngleGridImport = arcFullDegrees * gridImport / overallPowerConsumptions
 
         drawEnergyFlowPart(
             0.0f,
@@ -422,24 +418,22 @@ class MainEvccWidget(
     }
 
     private fun drawLoadpointPart(
-        startAngle: Float,
         sweepAngle: Float,
         canvas: Canvas,
         rect: RectF,
         color: Int,
-        soc: Int,
-        isCharging: Boolean
+        soc: Int
     ) {
         val paint = createArcPaint(color)
 
-        canvas.drawArc(rect, startAngle, sweepAngle, false, paint)
+        canvas.drawArc(rect, startAngleLoadpointArc, sweepAngle, false, paint)
 
         if(sweepAngle > 30.0f) {
             val textPaint = createFontPaint(blackColor)
 
            with(canvas) {
                 val path = Path()
-                path.addArc(rect, startAngle+sweepAngle, -sweepAngle)
+                path.addArc(rect, startAngleLoadpointArc+sweepAngle, -sweepAngle)
                 drawTextOnPath(
                     "$soc %",
                     path,
@@ -455,10 +449,13 @@ class MainEvccWidget(
 
 
     private fun createPowerString(value: Float):String {
-        return if(value > 1000) "${(value/1000.0f).format(1)} W" else "$value W"
+        return if(value > 1000)
+            "${(value/1000.0f).format(1)} kW"
+        else
+            "${value.format(0)} W"
     }
 
-    private fun drawSocLine(angle: Float, targetSoC: Int, canvas: Canvas, lineColor: Int) {
+    private fun drawSocLine(angle: Float, canvas: Canvas, lineColor: Int) {
         val paint = createLinePaint(lineColor)
 
         val rotateVectorYStart = widgetSize/2.0f - paddingMiddle

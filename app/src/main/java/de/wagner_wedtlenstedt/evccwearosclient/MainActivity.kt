@@ -1,23 +1,16 @@
 package de.wagner_wedtlenstedt.evccwearosclient
 
-import android.net.ConnectivityManager
-import android.net.Network
-import android.net.NetworkCapabilities
-import android.net.NetworkRequest
-import android.os.Build
 import android.os.Bundle
 import android.util.DisplayMetrics
+import android.view.View.VISIBLE
 import android.widget.Toast
 import androidx.activity.ComponentActivity
-import androidx.annotation.RequiresApi
 import androidx.lifecycle.ViewModelProvider
 import de.wagner_wedtlenstedt.evccwearosclient.data.EvccStateModel
 import de.wagner_wedtlenstedt.evccwearosclient.databinding.ActivityMainBinding
 import de.wagner_wedtlenstedt.evccwearosclient.ui.MainEvccWidget
 import de.wagner_wedtlenstedt.evccwearosclient.viewmodel.EvccViewModel
 import kotlin.math.abs
-import kotlin.math.min
-import android.view.View.VISIBLE
 import kotlin.math.max
 
 
@@ -30,7 +23,6 @@ class MainActivity : ComponentActivity(){
 
     private val batteryPowerThreshold = 50
 
-    @RequiresApi(Build.VERSION_CODES.R)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -90,39 +82,24 @@ class MainActivity : ComponentActivity(){
         val batteryDischarge = maxOf(0.0f, batteryPowerAdjusted)
         val batteryCharge = minOf(0.0f, batteryPowerAdjusted) * -1.0f
 
-        val ownPower = batteryDischarge + pvProduction
-        val consumption = homePower + batteryCharge + loadpointChargePower
-        val selfConsumption = min(ownPower, consumption)
+        val textViewInRight = binding.textViewInRight
+        val textViewErzeugung = binding.textViewErzeugungsValue
+        val textViewBatterieEntladung = binding.textViewBatterieEntladungValue
+        val textViewNetzbezug = binding.textViewNetzbezugValue
+        val textViewOutRight = binding.textViewOutRight
+        val textViewHouse = binding.textViewHouseValue
+        val textViewLadepunkt = binding.textViewLadepunktValue
+        val textViewBatterieLadung = binding.textViewBatterieLadenValue
+        val textViewEinspeisung = binding.textViewEinspeisungValue
 
-
-
-        val overallPowerConsumptions = selfConsumption + pvExport + gridImport
-
-        var textViewInRight = binding.textViewInRight
-        textViewInRight.text = "${pvProduction + batteryDischarge + gridImport} W"
-
-        var textViewErzeugung = binding.textViewErzeugungsValue
-        textViewErzeugung.text = "${pvProduction} W"
-
-        var textViewBatterieEntladung = binding.textViewBatterieEntladungValue
-        textViewBatterieEntladung.text = "${homeBatterySoc}% / ${batteryDischarge} W"
-
-        var textViewNetzbezug = binding.textViewNetzbezugValue
-        textViewNetzbezug.text = "${gridImport} W"
-
-        var textViewOutRight = binding.textViewOutRight
-        textViewOutRight.text = "${homePower + loadpointChargePower + batteryCharge + pvExport} W"
-
-        var textViewHouse = binding.textViewHouseValue
-        textViewHouse.text = "${homePower} W"
-
-        var textViewLadepunkt = binding.textViewLadepunktValue
-        textViewLadepunkt.text = "${loadpointChargePower} W"
-
-        var textViewBatterieLadung = binding.textViewBatterieLadenValue
-        textViewBatterieLadung.text = "${homeBatterySoc}% / ${batteryCharge} W"
-
-        var textViewEinspeisung = binding.textViewEinspeisungValue
-        textViewEinspeisung.text = "${pvExport} W"
+        textViewInRight.text = String.format("%.0f W",pvProduction + batteryDischarge + gridImport)
+        textViewErzeugung.text = String.format("%.0f W",pvProduction)
+        textViewBatterieEntladung.text = String.format("%d%% / %.0f W",homeBatterySoc,batteryDischarge)
+        textViewNetzbezug.text = String.format("%.0f W",gridImport)
+        textViewOutRight.text = String.format("%.0f W",homePower + loadpointChargePower + batteryCharge + pvExport)
+        textViewHouse.text = String.format("%.0f W",homePower)
+        textViewLadepunkt.text = String.format("%.0f W",loadpointChargePower)
+        textViewBatterieLadung.text = String.format("%d%% / %.0f W",homeBatterySoc,batteryCharge)
+        textViewEinspeisung.text = String.format("%.0f W",pvExport)
     }
 }
