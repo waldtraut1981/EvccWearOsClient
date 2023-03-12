@@ -19,6 +19,7 @@ class MainEvccWidget(
     private val resources: Resources
 ) {
 
+    private lateinit var currentEvccState: EvccStateModel
     private val greenColor = Color.argb(255, 15, 222, 65)
     private val yellowColor = Color.argb(255, 250, 240, 0)
     private val orangeColor = Color.argb(255, 250, 125, 0)
@@ -51,9 +52,18 @@ class MainEvccWidget(
         iconSize *= factor
         textSize *= factor
         leftPaddingCenterText *= factor
+
+        /*val clickListener: View.OnClickListener = View.OnClickListener { v ->
+            if (v.equals(imageView)) {
+                println("available vehicles: " + currentEvccState?.result?.vehicles)
+            }
+        }
+
+        imageView.setOnClickListener(clickListener)*/
     }
 
     fun update(it: EvccStateModel) {
+        currentEvccState = it
         val bitmap = Bitmap.createBitmap(widgetSize.toInt(), widgetSize.toInt(), Bitmap.Config.ARGB_8888)
         val canvas = Canvas(bitmap)
 

@@ -11,5 +11,6 @@ data class EvccResultModel(
     var prioritySoC:Int?=0,
     var pvConfigured:Boolean?=false,
     var pvPower:Float?=0.0f,
-    var siteTitle:String?=""
+    var siteTitle:String?="",
+    var vehicles:List<String>?=null
 )
